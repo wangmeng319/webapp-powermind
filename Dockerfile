@@ -1,8 +1,8 @@
 # ---- 1. 安装依赖 ----
 FROM node:22-alpine AS deps
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package*.json ./
+RUN npm install
 
 # ---- 2. 构建 ----
 FROM node:22-alpine AS builder
