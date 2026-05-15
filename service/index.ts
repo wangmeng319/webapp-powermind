@@ -44,11 +44,20 @@ export const fetchConversations = async () => {
   return get('conversations', { params: { limit: 100, first_id: '' } })
 }
 
+// Save a new conversation record (called after Dify returns a conversation_id)
+export const saveConversation = async (difyConversationId: string) => {
+  return post('conversations', { body: { difyConversationId } })
+}
+
+// Delete a conversation
+export const deleteConversation = async (conversationId: string) => {
+  return fetch(`/api/conversations/${conversationId}`, { method: 'DELETE' })
+}
+
 export const fetchChatList = async (conversationId: string) => {
   return get('messages', { params: { conversation_id: conversationId, limit: 20, last_id: '' } })
 }
 
-// init value. wait for server update
 export const fetchAppParams = async () => {
   return get('parameters')
 }

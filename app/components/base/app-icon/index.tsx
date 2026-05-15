@@ -28,7 +28,8 @@ const AppIcon: FC<AppIconProps> = ({
         background,
       }}
     >
-      🤖
+      <img src="/logo.png" alt="logo" className={style.logo} />
+
     </span>
   )
 }

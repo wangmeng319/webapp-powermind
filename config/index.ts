@@ -1,14 +1,18 @@
 import type { AppInfo } from '@/types/app'
+
+// APP_ID is non-secret, used as a localStorage key prefix on the client
 export const APP_ID = `${process.env.NEXT_PUBLIC_APP_ID}`
-export const API_KEY = `${process.env.NEXT_PUBLIC_APP_KEY}`
-export const API_URL = `${process.env.NEXT_PUBLIC_API_URL}`
+
+// API_KEY and API_URL are server-side only — access them via process.env directly in API routes
+// DO NOT export them here as they must not be bundled into the client
+
 export const APP_INFO: AppInfo = {
-  title: 'Chat APP',
+  title: 'PowerMind',
   description: '',
   copyright: '',
   privacy_policy: '',
-  default_language: 'en',
-  disable_session_same_site: false, // set it to true if you want to embed the chatbot in an iframe
+  default_language: 'zh-Hans',
+  disable_session_same_site: false,
 }
 
 export const isShowPrompt = false
