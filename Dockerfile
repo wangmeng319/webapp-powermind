@@ -20,6 +20,8 @@ FROM node:22-slim AS production
 WORKDIR /app
 ENV NODE_ENV=production
 
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 --ingroup nodejs nextjs
 
