@@ -32,6 +32,7 @@ export interface IChatProps {
   onFeedback?: FeedbackFunc
   checkCanSend?: () => boolean
   onSend?: (message: string, files: VisionFile[]) => void
+  onStop?: () => void
   useCurrentUserAvatar?: boolean
   isResponding?: boolean
   controlClearQuery?: number
@@ -46,6 +47,7 @@ const Chat: FC<IChatProps> = ({
   onFeedback,
   checkCanSend,
   onSend = () => { },
+  onStop,
   useCurrentUserAvatar,
   isResponding,
   controlClearQuery,
@@ -216,26 +218,44 @@ const Chat: FC<IChatProps> = ({
                 className={`
                   block w-full px-2 pr-[118px] py-[7px] leading-5 max-h-none text-base text-gray-700 outline-none appearance-none resize-none
                   ${visionConfig?.enabled && 'pl-12'}
+                  ${isResponding && 'opacity-50 cursor-not-allowed'}
                 `}
                 value={query}
                 onChange={handleContentChange}
                 onKeyUp={handleKeyUp}
                 onKeyDown={handleKeyDown}
+                disabled={isResponding}
                 autoSize
               />
               <div className="absolute bottom-2 right-6 flex items-center h-8">
-                <div className={`${s.count} mr-3 h-5 leading-5 text-sm bg-gray-50 text-gray-500 px-2 rounded`}>{query.trim().length}</div>
-                <Tooltip
-                  selector='send-tip'
-                  htmlContent={
-                    <div>
-                      <div>{t('common.operation.send')} Enter</div>
-                      <div>{t('common.operation.lineBreak')} Shift Enter</div>
+                {!isResponding && (
+                  <div className={`${s.count} mr-3 h-5 leading-5 text-sm bg-gray-50 text-gray-500 px-2 rounded`}>{query.trim().length}</div>
+                )}
+                {isResponding
+                  ? (
+                    <div
+                      className="w-8 h-8 cursor-pointer rounded-md flex items-center justify-center hover:bg-red-50"
+                      onClick={onStop}
+                      title="停止生成"
+                    >
+                      <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                        <rect x="5" y="5" width="14" height="14" rx="2" />
+                      </svg>
                     </div>
-                  }
-                >
-                  <div className={`${s.sendBtn} w-8 h-8 cursor-pointer rounded-md`} onClick={handleSend}></div>
-                </Tooltip>
+                  )
+                  : (
+                    <Tooltip
+                      selector='send-tip'
+                      htmlContent={
+                        <div>
+                          <div>{t('common.operation.send')} Enter</div>
+                          <div>{t('common.operation.lineBreak')} Shift Enter</div>
+                        </div>
+                      }
+                    >
+                      <div className={`${s.sendBtn} w-8 h-8 cursor-pointer rounded-md`} onClick={handleSend}></div>
+                    </Tooltip>
+                  )}
               </div>
             </div>
           </div>

@@ -159,6 +159,10 @@ const Main: FC<IMainProps> = () => {
   useEffect(handleConversationSwitch, [currConversationId, inited])
 
   const handleConversationIdChange = (id: string) => {
+    if (isResponding) {
+      notify({ type: 'info', message: '请等待当前回复完成后再切换对话' })
+      return
+    }
     if (id === '-1') {
       createNewChat()
       setConversationIdChangeBecauseOfNew(true)
@@ -635,6 +639,7 @@ const Main: FC<IMainProps> = () => {
               <Chat
                 chatList={chatList}
                 onSend={handleSend}
+                onStop={() => abortController?.abort()}
                 onFeedback={handleFeedback}
                 isResponding={isResponding}
                 checkCanSend={checkCanSend}
