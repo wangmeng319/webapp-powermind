@@ -21,3 +21,7 @@
 .appIcon.rounded {
   @apply rounded-full;
 }
+
+.logo {
+  @apply w-full h-full object-contain;
+}
