@@ -69,3 +69,15 @@ export const updateFeedback = async ({ url, body }: { url: string, body: Feedbac
 export const generationConversationName = async (id: string) => {
   return post(`conversations/${id}/name`, { body: { auto_generate: true } })
 }
+
+export const fetchSuggestedQuestions = async (messageId: string): Promise<string[]> => {
+  try {
+    const res = await fetch(`/api/suggested-questions?messageId=${encodeURIComponent(messageId)}`)
+    if (!res.ok) { return [] }
+    const data = await res.json()
+    return Array.isArray(data?.data) ? data.data : []
+  }
+  catch {
+    return []
+  }
+}

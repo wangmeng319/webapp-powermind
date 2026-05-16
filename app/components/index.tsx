@@ -9,7 +9,7 @@ import Toast from '@/app/components/base/toast'
 import Sidebar from '@/app/components/sidebar'
 import ConfigSence from '@/app/components/config-scence'
 import Header from '@/app/components/header'
-import { fetchAppParams, fetchChatList, fetchConversations, generationConversationName, saveConversation, sendChatMessage, updateFeedback } from '@/service'
+import { deleteConversation, fetchAppParams, fetchChatList, fetchConversations, fetchSuggestedQuestions, generationConversationName, saveConversation, sendChatMessage, updateFeedback } from '@/service'
 import type { ChatItem, ConversationItem, Feedbacktype, PromptConfig, VisionFile, VisionSettings } from '@/types/app'
 import type { FileUpload } from '@/app/components/base/file-uploader-in-attachment/types'
 import { Resolution, TransferMethod, WorkflowRunningStatus } from '@/types/app'
@@ -492,6 +492,7 @@ const Main: FC<IMainProps> = () => {
           setChatList(newListWithAnswer)
           return
         }
+        const finalMessageId = messageEnd.id || responseItem.id
         const newListWithAnswer = produce(
           getChatList().filter(item => item.id !== responseItem.id && item.id !== placeholderAnswerId),
           (draft) => {
@@ -501,6 +502,17 @@ const Main: FC<IMainProps> = () => {
           },
         )
         setChatList(newListWithAnswer)
+
+        // Fetch suggested follow-up questions
+        if (finalMessageId) {
+          fetchSuggestedQuestions(finalMessageId).then((suggestions) => {
+            if (!suggestions.length) { return }
+            setChatList(produce(getChatList(), (draft) => {
+              const target = draft.find(item => item.id === finalMessageId)
+              if (target) { target.suggestedQuestions = suggestions }
+            }))
+          })
+        }
       },
       onMessageReplace: (messageReplace) => {
         setChatList(produce(getChatList(), (draft) => {
@@ -547,6 +559,14 @@ const Main: FC<IMainProps> = () => {
     })
   }
 
+  const handleDeleteConversation = async (conversationId: string) => {
+    await deleteConversation(conversationId)
+    const { data: allConversations }: any = await fetchConversations()
+    setConversationList(allConversations as any)
+    if (currConversationId === conversationId)
+    { handleConversationIdChange('-1') }
+  }
+
   const handleFeedback = async (messageId: string, feedback: Feedbacktype) => {
     await updateFeedback({ url: `/messages/${messageId}/feedbacks`, body: { rating: feedback.rating } })
     const newChatList = chatList.map((item) => {
@@ -563,6 +583,7 @@ const Main: FC<IMainProps> = () => {
       <Sidebar
         list={conversationList}
         onCurrentIdChange={handleConversationIdChange}
+        onDeleteConversation={handleDeleteConversation}
         currentId={currConversationId}
         copyRight={APP_INFO.copyright || APP_INFO.title}
       />
