@@ -639,7 +639,16 @@ const Main: FC<IMainProps> = () => {
               <Chat
                 chatList={chatList}
                 onSend={handleSend}
-                onStop={() => abortController?.abort()}
+                onStop={() => {
+                  abortController?.abort()
+                  if (messageTaskId) {
+                    fetch('/api/chat-messages/stop', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ taskId: messageTaskId }),
+                    }).catch(() => {})
+                  }
+                }}
                 onFeedback={handleFeedback}
                 isResponding={isResponding}
                 checkCanSend={checkCanSend}
