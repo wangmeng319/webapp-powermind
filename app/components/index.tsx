@@ -430,7 +430,7 @@ const Main: FC<IMainProps> = () => {
       async onCompleted(hasError?: boolean) {
         if (hasError) { return }
 
-        if (getConversationIdChangeBecauseOfNew()) {
+        if (getConversationIdChangeBecauseOfNew() && tempNewConversationId) {
           // 1. Save new conversation to MySQL
           await saveConversation(tempNewConversationId)
           // 2. Auto-generate name (syncs to MySQL via name route)

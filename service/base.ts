@@ -241,6 +241,10 @@ const handleStream = (
         return
       }
       if (!hasError) { read() }
+    }).catch((e: any) => {
+      // AbortError means user stopped the stream intentionally — keep partial content
+      if (e?.name === 'AbortError') { onCompleted?.() }
+      else { onCompleted?.(true) }
     })
   }
   read()
@@ -368,10 +372,15 @@ export const ssePost = (
     onNodeStarted,
     onNodeFinished,
     onError,
+    getAbortController,
   }: IOtherOptions,
 ) => {
+  const abortController = new AbortController()
+  getAbortController?.(abortController)
+
   const options = Object.assign({}, baseOptions, {
     method: 'POST',
+    signal: abortController.signal,
   }, fetchOptions)
 
   const urlPrefix = API_PREFIX
@@ -403,6 +412,11 @@ export const ssePost = (
       }, onThought, onMessageEnd, onMessageReplace, onFile, onWorkflowStarted, onWorkflowFinished, onNodeStarted, onNodeFinished)
     })
     .catch((e) => {
+      // AbortError means user stopped intentionally — keep partial content, no error toast
+      if (e?.name === 'AbortError') {
+        onCompleted?.()
+        return
+      }
       Toast.notify({ type: 'error', message: e })
       onError?.(e)
     })
