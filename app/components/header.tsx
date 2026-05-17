@@ -35,7 +35,7 @@ const Header: FC<IHeaderProps> = ({
   }
 
   return (
-    <div className="shrink-0 flex items-center justify-between h-12 px-3 bg-gray-100">
+    <div className="shrink-0 flex items-center justify-between h-12 px-3 bg-gray-200 border-b border-gray-300">
       {/* Left: mobile hamburger */}
       {isMobile
         ? (

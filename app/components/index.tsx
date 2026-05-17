@@ -9,7 +9,7 @@ import Toast from '@/app/components/base/toast'
 import Sidebar from '@/app/components/sidebar'
 import ConfigSence from '@/app/components/config-scence'
 import Header from '@/app/components/header'
-import { deleteConversation, fetchAppParams, fetchChatList, fetchConversations, fetchSuggestedQuestions, generationConversationName, saveConversation, sendChatMessage, updateFeedback } from '@/service'
+import { deleteConversation, fetchAppParams, fetchChatList, fetchConversations, fetchSuggestedQuestions, generationConversationName, renameConversation, saveConversation, sendChatMessage, updateFeedback } from '@/service'
 import type { ChatItem, ConversationItem, Feedbacktype, PromptConfig, VisionFile, VisionSettings } from '@/types/app'
 import type { FileUpload } from '@/app/components/base/file-uploader-in-attachment/types'
 import { Resolution, TransferMethod, WorkflowRunningStatus } from '@/types/app'
@@ -51,6 +51,9 @@ const Main: FC<IMainProps> = () => {
   const [promptConfig, setPromptConfig] = useState<PromptConfig | null>(null)
   const [inited, setInited] = useState<boolean>(false)
   const [isShowSidebar, { setTrue: showSidebar, setFalse: hideSidebar }] = useBoolean(false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [nameEditValue, setNameEditValue] = useState('')
   const [visionConfig, setVisionConfig] = useState<VisionSettings | undefined>({
     enabled: false,
     number_limits: 2,
@@ -572,6 +575,17 @@ const Main: FC<IMainProps> = () => {
     })
   }
 
+  const handleRenameConversation = async (newName: string) => {
+    const trimmed = newName.trim()
+    setIsEditingName(false)
+    if (!trimmed || trimmed === conversationName || !currConversationId || currConversationId === '-1') { return }
+    await renameConversation(currConversationId, trimmed)
+    // Update existConversationInfo immediately so the sticky header reflects the new name
+    setExistConversationInfo(prev => prev ? { ...prev, name: trimmed } : prev)
+    const { data: allConversations }: any = await fetchConversations()
+    setConversationList(allConversations as any)
+  }
+
   const handleDeleteConversation = async (conversationId: string) => {
     await deleteConversation(conversationId)
     const { data: allConversations }: any = await fetchConversations()
@@ -597,8 +611,17 @@ const Main: FC<IMainProps> = () => {
         list={conversationList}
         onCurrentIdChange={handleConversationIdChange}
         onDeleteConversation={handleDeleteConversation}
+        onRenameConversation={async (id, name) => {
+          await renameConversation(id, name)
+          if (id === currConversationId)
+          { setExistConversationInfo(prev => prev ? { ...prev, name } : prev) }
+          const { data: allConversations }: any = await fetchConversations()
+          setConversationList(allConversations as any)
+        }}
         currentId={currConversationId}
         copyRight={APP_INFO.copyright || APP_INFO.title}
+        collapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(v => !v)}
       />
     )
   }
@@ -631,6 +654,34 @@ const Main: FC<IMainProps> = () => {
         )}
         {/* main */}
         <div className='flex-grow flex flex-col h-[calc(100vh_-_3rem)] overflow-y-auto'>
+          {/* Sticky conversation name bar */}
+          {hasSetInputs && (
+            <div className='sticky top-0 z-10 shrink-0 flex items-center h-12 px-8 bg-white border-b border-gray-100'>
+              {isEditingName
+                ? (
+                  <input
+                    autoFocus
+                    className='text-sm font-medium text-gray-900 bg-transparent border-b border-gray-300 focus:outline-none focus:border-blue-500 w-64 max-w-full'
+                    value={nameEditValue}
+                    onChange={e => setNameEditValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') { handleRenameConversation(nameEditValue) }
+                      if (e.key === 'Escape') { setIsEditingName(false) }
+                    }}
+                    onBlur={() => handleRenameConversation(nameEditValue)}
+                  />
+                )
+                : (
+                  <button
+                    onClick={() => { setNameEditValue(conversationName); setIsEditingName(true) }}
+                    className='text-sm font-medium text-gray-900 truncate hover:text-blue-600 transition-colors cursor-text'
+                    title='点击修改对话名称'
+                  >
+                    {conversationName}
+                  </button>
+                )}
+            </div>
+          )}
           <ConfigSence
             conversationName={conversationName}
             hasSetInputs={hasSetInputs}
@@ -663,6 +714,7 @@ const Main: FC<IMainProps> = () => {
                 checkCanSend={checkCanSend}
                 visionConfig={visionConfig}
                 fileConfig={fileConfig}
+                sidebarCollapsed={isSidebarCollapsed}
               />
             </div>
           )}

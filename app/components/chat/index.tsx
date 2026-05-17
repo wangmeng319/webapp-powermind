@@ -3,6 +3,8 @@ import type { FC } from 'react'
 import React, { useEffect, useRef } from 'react'
 import cn from 'classnames'
 import { useTranslation } from 'react-i18next'
+import { PaperClipIcon } from '@heroicons/react/24/outline'
+import { PaperAirplaneIcon } from '@heroicons/react/24/solid'
 import Textarea from 'rc-textarea'
 import s from './style.module.css'
 import Answer from './answer'
@@ -38,6 +40,7 @@ export interface IChatProps {
   controlClearQuery?: number
   visionConfig?: VisionSettings
   fileConfig?: FileUpload
+  sidebarCollapsed?: boolean
 }
 
 const Chat: FC<IChatProps> = ({
@@ -53,6 +56,7 @@ const Chat: FC<IChatProps> = ({
   controlClearQuery,
   visionConfig,
   fileConfig,
+  sidebarCollapsed,
 }) => {
   const { t } = useTranslation()
   const { notify } = Toast
@@ -97,6 +101,7 @@ const Chat: FC<IChatProps> = ({
   } = useImageFiles()
 
   const [attachmentFiles, setAttachmentFiles] = React.useState<FileEntity[]>([])
+  const [showAttachment, setShowAttachment] = React.useState(false)
 
   const handleSend = () => {
     if (!valid() || (checkCanSend && !checkCanSend())) { return }
@@ -178,84 +183,100 @@ const Chat: FC<IChatProps> = ({
       </div>
       {
         !isHideSendInput && (
-          <div className='fixed z-10 bottom-0 left-1/2 transform -translate-x-1/2 pc:ml-[122px] tablet:ml-[96px] mobile:ml-0 pc:w-[794px] tablet:w-[794px] max-w-full mobile:w-full px-3.5'>
-            <div className='p-[5.5px] max-h-[150px] bg-white border-[1.5px] border-gray-200 rounded-xl overflow-y-auto'>
-              {
-                visionConfig?.enabled && (
-                  <>
-                    <div className='absolute bottom-2 left-2 flex items-center'>
-                      <ChatImageUploader
-                        settings={visionConfig}
-                        onUpload={onUpload}
-                        disabled={files.length >= visionConfig.number_limits}
-                      />
-                      <div className='mx-1 w-[1px] h-4 bg-black/5' />
-                    </div>
-                    <div className='pl-[52px]'>
-                      <ImageList
-                        list={files}
-                        onRemove={onRemove}
-                        onReUpload={onReUpload}
-                        onImageLinkLoadSuccess={onImageLinkLoadSuccess}
-                        onImageLinkLoadError={onImageLinkLoadError}
-                      />
-                    </div>
-                  </>
-                )
-              }
-              {
-                fileConfig?.enabled && (
-                  <div className={`${visionConfig?.enabled ? 'pl-[52px]' : ''} mb-1`}>
-                    <FileUploaderInAttachmentWrapper
-                      fileConfig={fileConfig}
-                      value={attachmentFiles}
-                      onChange={setAttachmentFiles}
+          <div className={`fixed z-10 bottom-0 right-0 mobile:left-0 tablet:left-[192px] ${sidebarCollapsed ? 'pc:left-10' : 'pc:left-[244px]'} px-3.5 pb-2`}>
+            <div className="mx-auto max-w-[794px]">
+              <div className='flex items-end gap-1.5 p-[5.5px] bg-white border-[1.5px] border-gray-200 rounded-xl shadow-sm'>
+                {/* Left: image uploader icon (when vision enabled) */}
+                {visionConfig?.enabled && (
+                  <div className="shrink-0 pb-1">
+                    <ChatImageUploader
+                      settings={visionConfig}
+                      onUpload={onUpload}
+                      disabled={files.length >= visionConfig.number_limits}
                     />
                   </div>
-                )
-              }
-              <Textarea
-                className={`
-                  block w-full px-2 pr-[118px] py-[7px] leading-5 max-h-none text-base text-gray-700 outline-none appearance-none resize-none
-                  ${visionConfig?.enabled && 'pl-12'}
-                  ${isResponding && 'opacity-50 cursor-not-allowed'}
-                `}
-                value={query}
-                onChange={handleContentChange}
-                onKeyUp={handleKeyUp}
-                onKeyDown={handleKeyDown}
-                disabled={isResponding}
-                autoSize
-              />
-              <div className="absolute bottom-2 right-6 flex items-center h-8">
-                {!isResponding && (
-                  <div className={`${s.count} mr-3 h-5 leading-5 text-sm bg-gray-50 text-gray-500 px-2 rounded`}>{query.trim().length}</div>
                 )}
-                {isResponding
-                  ? (
-                    <div
-                      className="w-8 h-8 cursor-pointer rounded-md flex items-center justify-center hover:bg-red-50"
-                      onClick={onStop}
-                      title="停止生成"
-                    >
-                      <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                        <rect x="5" y="5" width="14" height="14" rx="2" />
-                      </svg>
-                    </div>
-                  )
-                  : (
-                    <Tooltip
-                      selector='send-tip'
-                      htmlContent={
-                        <div>
-                          <div>{t('common.operation.send')} Enter</div>
-                          <div>{t('common.operation.lineBreak')} Shift Enter</div>
-                        </div>
-                      }
-                    >
-                      <div className={`${s.sendBtn} w-8 h-8 cursor-pointer rounded-md`} onClick={handleSend}></div>
-                    </Tooltip>
+
+                {/* Center: image list + attachment panel + textarea */}
+                <div className="flex-1 min-w-0 max-h-[150px] overflow-y-auto">
+                  {visionConfig?.enabled && (
+                    <ImageList
+                      list={files}
+                      onRemove={onRemove}
+                      onReUpload={onReUpload}
+                      onImageLinkLoadSuccess={onImageLinkLoadSuccess}
+                      onImageLinkLoadError={onImageLinkLoadError}
+                    />
                   )}
+                  {fileConfig?.enabled && (showAttachment || attachmentFiles.length > 0) && (
+                    <div className="mb-1">
+                      <FileUploaderInAttachmentWrapper
+                        fileConfig={fileConfig}
+                        value={attachmentFiles}
+                        onChange={setAttachmentFiles}
+                        showButtons={showAttachment}
+                      />
+                    </div>
+                  )}
+                  <Textarea
+                    className={`block w-full px-2 py-[7px] leading-5 max-h-none text-base text-gray-700 outline-none appearance-none resize-none ${isResponding && 'opacity-50 cursor-not-allowed'}`}
+                    value={query}
+                    onChange={handleContentChange}
+                    onKeyUp={handleKeyUp}
+                    onKeyDown={handleKeyDown}
+                    disabled={isResponding}
+                    autoSize
+                  />
+                </div>
+
+                {/* Right: char count + buttons — always visible at bottom */}
+                <div className="flex items-center gap-1 shrink-0 pb-1">
+                  {!isResponding && (
+                    <div className={`${s.count} h-5 leading-5 text-sm bg-gray-50 text-gray-500 px-2 rounded`}>{query.trim().length}</div>
+                  )}
+                  {isResponding
+                    ? (
+                      <div
+                        className="w-8 h-8 cursor-pointer rounded-md flex items-center justify-center hover:bg-red-50"
+                        onClick={onStop}
+                        title="停止生成"
+                      >
+                        <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                          <rect x="5" y="5" width="14" height="14" rx="2" />
+                        </svg>
+                      </div>
+                    )
+                    : (
+                      <>
+                        {fileConfig?.enabled && (
+                          <button
+                            onClick={() => setShowAttachment(v => !v)}
+                            className={`flex items-center justify-center h-8 w-8 rounded-lg transition-colors ${showAttachment ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-100 text-gray-400 hover:text-gray-500'}`}
+                            title="附件"
+                          >
+                            <PaperClipIcon className="h-4 w-4" />
+                          </button>
+                        )}
+                        <Tooltip
+                          selector='send-tip'
+                          htmlContent={
+                            <div>
+                              <div>{t('common.operation.send')} Enter</div>
+                              <div>{t('common.operation.lineBreak')} Shift Enter</div>
+                            </div>
+                          }
+                        >
+                          <button
+                            className="flex items-center justify-center h-8 w-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors"
+                            onClick={handleSend}
+                            title="发送"
+                          >
+                            <PaperAirplaneIcon className="h-4 w-4" />
+                          </button>
+                        </Tooltip>
+                      </>
+                    )}
+                </div>
               </div>
             </div>
           </div>

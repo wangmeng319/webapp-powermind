@@ -70,6 +70,10 @@ export const generationConversationName = async (id: string) => {
   return post(`conversations/${id}/name`, { body: { auto_generate: true } })
 }
 
+export const renameConversation = async (id: string, name: string) => {
+  return post(`conversations/${id}/name`, { body: { name, auto_generate: false } })
+}
+
 export const fetchSuggestedQuestions = async (messageId: string): Promise<string[]> => {
   try {
     const res = await fetch(`/api/suggested-questions?messageId=${encodeURIComponent(messageId)}`)

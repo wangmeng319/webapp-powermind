@@ -26,9 +26,11 @@ interface Option {
 }
 interface FileUploaderInAttachmentProps {
   fileConfig: FileUpload
+  showButtons?: boolean
 }
 const FileUploaderInAttachment = ({
   fileConfig,
+  showButtons = true,
 }: FileUploaderInAttachmentProps) => {
   const { t } = useTranslation()
   const files = useStore(s => s.files)
@@ -87,23 +89,27 @@ const FileUploaderInAttachment = ({
 
   return (
     <div>
-      <div className='flex items-center space-x-1'>
-        {options.map(renderOption)}
-      </div>
-      <div className='mt-1 space-y-1'>
-        {
-          files.map(file => (
-            <FileItem
-              key={file.id}
-              file={file}
-              showDeleteAction
-              showDownloadAction={false}
-              onRemove={() => handleRemoveFile(file.id)}
-              onReUpload={() => handleReUploadFile(file.id)}
-            />
-          ))
-        }
-      </div>
+      {showButtons && (
+        <div className='flex items-center space-x-1'>
+          {options.map(renderOption)}
+        </div>
+      )}
+      {files.length > 0 && (
+        <div className={showButtons ? 'mt-1 space-y-1' : 'space-y-1'}>
+          {
+            files.map(file => (
+              <FileItem
+                key={file.id}
+                file={file}
+                showDeleteAction
+                showDownloadAction={false}
+                onRemove={() => handleRemoveFile(file.id)}
+                onReUpload={() => handleReUploadFile(file.id)}
+              />
+            ))
+          }
+        </div>
+      )}
     </div>
   )
 }
@@ -112,18 +118,20 @@ interface FileUploaderInAttachmentWrapperProps {
   value?: FileEntity[]
   onChange: (files: FileEntity[]) => void
   fileConfig: FileUpload
+  showButtons?: boolean
 }
 const FileUploaderInAttachmentWrapper = ({
   value,
   onChange,
   fileConfig,
+  showButtons,
 }: FileUploaderInAttachmentWrapperProps) => {
   return (
     <FileContextProvider
       value={value}
       onChange={onChange}
     >
-      <FileUploaderInAttachment fileConfig={fileConfig} />
+      <FileUploaderInAttachment fileConfig={fileConfig} showButtons={showButtons} />
     </FileContextProvider>
   )
 }
