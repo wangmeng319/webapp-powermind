@@ -430,6 +430,15 @@ const Main: FC<IMainProps> = () => {
       async onCompleted(hasError?: boolean) {
         if (hasError) { return }
 
+        // If workflow is still running when stream ends (aborted mid-way), mark it stopped
+        if (responseItem.workflowProcess?.status === WorkflowRunningStatus.Running) {
+          responseItem.workflowProcess.status = WorkflowRunningStatus.Stopped
+          setChatList(produce(getChatList(), (draft) => {
+            const target = draft.find(item => item.id === responseItem.id)
+            if (target && target.workflowProcess) { target.workflowProcess.status = WorkflowRunningStatus.Stopped }
+          }))
+        }
+
         if (getConversationIdChangeBecauseOfNew() && tempNewConversationId) {
           // 1. Save new conversation to MySQL
           await saveConversation(tempNewConversationId)
