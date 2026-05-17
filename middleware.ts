@@ -24,6 +24,11 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/', request.url))
     }
 
+    // Admin-only routes
+    if (pathname.startsWith('/admin') && user.role !== 'ADMIN') {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+
     // Inject user info into request headers for API routes
     const requestHeaders = new Headers(request.headers)
     requestHeaders.set('x-user-id', user.userId)

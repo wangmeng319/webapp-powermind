@@ -36,6 +36,8 @@ export interface IChatProps {
   onSend?: (message: string, files: VisionFile[]) => void
   onStop?: () => void
   useCurrentUserAvatar?: boolean
+  userAvatarUrl?: string | null
+  username?: string
   isResponding?: boolean
   controlClearQuery?: number
   visionConfig?: VisionSettings
@@ -52,6 +54,8 @@ const Chat: FC<IChatProps> = ({
   onSend = () => { },
   onStop,
   useCurrentUserAvatar,
+  userAvatarUrl,
+  username,
   isResponding,
   controlClearQuery,
   visionConfig,
@@ -176,6 +180,8 @@ const Chat: FC<IChatProps> = ({
               id={item.id}
               content={item.content}
               useCurrentUserAvatar={useCurrentUserAvatar}
+              userAvatarUrl={userAvatarUrl}
+              username={username}
               imgSrcs={(item.message_files && item.message_files?.length > 0) ? item.message_files.map(item => item.url) : []}
             />
           )

@@ -35,7 +35,7 @@ const Main: FC<IMainProps> = () => {
   /*
   * current user
   */
-  const [currentUser, setCurrentUser] = useState<{ username: string, role: string } | null>(null)
+  const [currentUser, setCurrentUser] = useState<{ username: string, role: string, avatarUrl?: string | null } | null>(null)
   useEffect(() => {
     fetch('/api/auth/me')
       .then(r => r.ok ? r.json() : null)
@@ -638,9 +638,12 @@ const Main: FC<IMainProps> = () => {
       <Header
         title={APP_INFO.title}
         username={currentUser?.username}
+        role={currentUser?.role}
+        avatarUrl={currentUser?.avatarUrl}
         isMobile={isMobile}
         onShowSideBar={showSidebar}
         onCreateNewChat={() => handleConversationIdChange('-1')}
+        onAvatarChange={url => setCurrentUser(prev => prev ? { ...prev, avatarUrl: url } : prev)}
       />
       <div className="flex rounded-t-2xl bg-white overflow-hidden">
         {/* sidebar */}
@@ -715,6 +718,9 @@ const Main: FC<IMainProps> = () => {
                 visionConfig={visionConfig}
                 fileConfig={fileConfig}
                 sidebarCollapsed={isSidebarCollapsed}
+                useCurrentUserAvatar={true}
+                userAvatarUrl={currentUser?.avatarUrl}
+                username={currentUser?.username}
               />
             </div>
           )}
