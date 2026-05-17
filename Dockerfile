@@ -29,6 +29,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
+# 确保上传目录存在且容器用户有写权限（volume 挂载时由宿主机覆盖）
+RUN mkdir -p /app/public/uploads/avatars && chmod -R 777 /app/public/uploads
+
 # Prisma 客户端（standalone 不自动包含）
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma/client ./node_modules/@prisma/client

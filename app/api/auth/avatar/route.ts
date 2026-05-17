@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
   const buffer = Buffer.from(await file.arrayBuffer())
   await writeFile(filepath, buffer)
 
-  const avatarUrl = `/uploads/avatars/${filename}`
+  const avatarUrl = `/api/avatars/${filename}`
 
   // Delete old avatar file if it exists
   const existing = await prisma.user.findUnique({
@@ -48,9 +48,13 @@ export async function POST(request: NextRequest) {
     select: { avatarUrl: true },
   })
   if (existing?.avatarUrl) {
-    const oldPath = join(process.cwd(), 'public', existing.avatarUrl)
-    if (existsSync(oldPath)) {
-      await unlink(oldPath).catch(() => {})
+    // Support both old (/uploads/avatars/) and new (/api/avatars/) URL formats
+    const oldFilename = existing.avatarUrl.split('/').pop()
+    if (oldFilename) {
+      const oldPath = join(process.cwd(), 'public', 'uploads', 'avatars', oldFilename)
+      if (existsSync(oldPath)) {
+        await unlink(oldPath).catch(() => {})
+      }
     }
   }
 
